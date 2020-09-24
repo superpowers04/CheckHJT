@@ -1,37 +1,45 @@
 #!/bin/bash
 
 me=`basename "$0"`
-usage="\n${me} - Checks HJT logs and outputs issues\n\n   Usage: ${me} [-cli] [-h] [-r] [-u] url/detection \n\n Providing standard text will run it through the detection process\nArguments:\n -h, --help : Show this help page\n -r         : Rescan last log\n -cli         : Print with formatting for CLI instead of Discord\n"
+usage="\n${me} - Checks HJT logs and outputs issues
+
+  Usage: ${me} [-discord] [-h] [-r] [-u] url/detection 
+    Providing standard text will run it through the detection process
+  Arguments:
+   -h, --help : Show this help page
+   -r         : Rescan last log
+   -discord         : Print with formatting for Discord instead of CLI
+   Default: Print with formatting for CLI\n"
 # Made by https://github.com/superpowers04
 # This file is extremely unorganised
 # I do not currently plan on making this file optimised or overhauling it
-# This is specifically meant for SuperBot but it works in Command Line aswell using the -cli argument
+# This is specifically meant for SuperBot but it works in Command Line 
 
 hjtlog="./lasthjtlog.html"
 
-if [[ "$1" == "-cli" ]]; then
-	RED='\e[0;31;40m'
-	BLUE='\e[0;34;40m'
-	YELLOW='\e[0;33;40m'
-	GREEN='\e[0;32;40m'
-	NC='\e[0;37;40m'
-	bold='\e[1;37;40m'
-	arg1="${2//[\"\'\!\$\~]/ }"
-	runmode="cli"
-	htmlfile="./chkhjt.html" 
-	loghtmllink="file:/${PWD}/chkhjt.html"
-else
+if [[ "$1" == "-discord" ]]; then
 	RED=':exclamation:'
 	BLUE=''
 	YELLOW=':grey_exclamation: '
 	GREEN=':white_check_mark:'
 	NC=''
 	bold='**'
-	arg1="${1//[\"\'\!\$\~]/ }"
+	arg1="${2//[\"\'\!\$\~]/ }"
 	argall="${@//[\"\'\!\$\~]/ }"
-	htmlfile="/var/www/html/logs/chkhjt.html" 
-	loghtmllink="http://super04.mooo.com:8080/logs/chkhjt.html"
+	htmlfile="file:/${PWD}/chkhjt.html" 
+	loghtmllink="Unconfigured"
 	runmode="discord/other"
+else
+	RED='\e[0;31;40m'
+	BLUE='\e[0;34;40m'
+	YELLOW='\e[0;33;40m'
+	GREEN='\e[0;32;40m'
+	NC='\e[0;37;40m'
+	bold='\e[1;37;40m'
+	arg1="${1//[\"\'\!\$\~]/ }"
+	runmode="cli"
+	htmlfile="./chkhjt.html" 
+	loghtmllink="file:/${PWD}/chkhjt.html"
 fi
 
 logtype=""
@@ -237,7 +245,7 @@ function detect {
 						has="${has} $cur"
 					fi
 					;;
-				*"avg"*)
+				*"avg.exe"*)
 					cur="avg"
 					if [[ "${has}" != *" ${cur}"*  ]]; then
 						mess="${mess}\n${RED}Has AVG Antivirus, Removal Recommended"
@@ -545,26 +553,40 @@ function detect {
 				*"Processor:"*)
 					cur="processordxdiag"
 					if [[ "${has}" != *" ${cur}"*   ]]; then
-						mess="${mess}\n> ${NC}Processor:${1:10}"
+						url="${1:11}"
+						url="${url// /+}"
+						url="${url//\?/%%3F}"
+						url="${url//\$/%%24}"
+						mess="${mess}\n> ${NC}Processor:${1:10} (DDG search: <https://duckduckgo.com/?q=${url}>)"
 						has="${has} ${cur}"
 					fi
 					;;
 				*"Manufacturer:"*)
 					manufacturer=""
-					case "${1}" in
-						*"Advanced Micro Devices, Inc."* )
-							manufacturer="(Download: <https://support.amd.com/en-us/download/auto-detect-tool>)"
-							;;
-						*"NVIDIA"* )
-							manufacturer="(Download: <https://www.nvidia.com/download/index.aspx?lang=en-us>)"
-							;;
-						*"Intel Corporation"* )
-							manufacturer="(Download: <https://downloadcenter.intel.com/>)"
-							;;
-					esac
-					mess="${mess}\n> ${NC}${1} ${manufacturer}"
+					# Deprecated
+					# case "${1}" in
+					# 	*"Advanced Micro Devices, Inc."* )
+					# 		manufacturer="(Download: <https://support.amd.com/en-us/download/auto-detect-tool>)"
+					# 		;;
+					# 	*"NVIDIA"* )
+					# 		manufacturer="(Download: <https://www.nvidia.com/download/index.aspx?lang=en-us>)"
+					# 		;;
+					# 	*"Intel Corporation"* )
+					# 		manufacturer="(Download: <https://downloadcenter.intel.com/>)"
+					# 		;;
+					# esac  ${manufacturer} 
+					mess="${mess}\n> ${NC}${1}"
 				;;
-				"Memory:"* | *"Available OS Memory:"* | *"Card name:"*  | *"Chip type:"*)
+
+				*"Card name:"*)
+					url="${1:11}"
+					url="${url// /+}"
+					url="${url//\?/%%3F}"
+					url="${url//\$/%%24}"
+					mess="${mess}\n> ${NC}Card name:${1:10} (DDG search: <https://duckduckgo.com/?q=${url}+drivers>)"
+					has="${has} ${cur}"
+					;;
+				"Memory:"* | *"Available OS Memory:"* | *"Chip type:"*)
 
 
 
@@ -725,7 +747,6 @@ echo "$(date "+%D@%H:%M") - Starting hjtchecker" > hjtchecker.log
 		line+=1
 
 		detect "$p"
-
 
 	done <${hjtlog}
 
