@@ -5,7 +5,7 @@ function check {
     printf "Hijackthis alternative for Unix using bash\nRun by:\n$USER \nUname:\n"
     uname -a
     printf "Java -version output:\n"
-    java -version &2>1
+    java -version 2>&1
     if [[ -e /lib/jvm ]];then
         printf "\nJava installations in /lib/jvm:\n"
         ls /lib/jvm    
@@ -43,14 +43,18 @@ function check {
     fi
 }
 
-if [[ "$@" == "-h" ]]; then
-    printf "Usage:\n -h : Print this help message\n -f : Produce output file instead of uploading"
-elif [[ "$@" == "-f" ]]; then
-    printf "\nAnalysing..\033[0;1m"
-    check > ~/hjtlog
-    printf "\n\033[0;1mWe created a file at your home directory called 'hjtlog', Please send this to us\n"
-else
-    printf "\nAnalysing.."
-    check | curl -F 'sprunge=<-' http://sprunge.us/
-    printf "\nPlease give us the link above"
-fi
+case "$@" in
+    "-h" )
+        printf "Usage:\n -h : Print this help message\n -f : Produce output file instead of uploading\n"
+    ;;
+    "-f" )
+        printf "\nAnalysing..\033[0;1m"
+        check > ~/hjtlog
+        printf "\n\033[0;1mWe created a file at your home directory called 'hjtlog', Please send this to us\n"
+    ;;
+    * )
+        printf "\nAnalysing.."
+        check | curl -F 'sprunge=<-' http://sprunge.us/
+        printf "\nPlease give us the link above"
+    ;;
+esac
